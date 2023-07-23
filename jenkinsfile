@@ -1,0 +1,33 @@
+pipeline {
+    agent { label 'JDK-8' }
+    options {
+        retry(3)
+        timeout(time: 30, unit: 'MINUTES')
+    }
+    triggers {
+        pollSCM('* * * * *')
+    }
+    tools {
+        jdk 'JDK-8'
+    }
+    stages {
+        stage('code') {
+            steps {
+                git url: 'https://github.com/dilip309/game-of-life.git',
+                    branch: 'master'
+            }
+        }
+        stage('package') {
+            steps {
+                sh script: 'mvn clean package'
+            }
+        }
+        stage('report') {
+            steps {
+                archiveArtifacts artifacts: '**/target/gameoflife.war'
+                junit testResults: '**/surefire-reports/TEST-*.xml'
+            }
+        }
+    }
+
+}
